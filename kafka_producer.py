@@ -21,7 +21,7 @@ else:
     raise Exception("Could not connect to Kafka after 5 attempts.")
 
 # Load batch data
-data = pd.read_csv('your_dataset.csv')
+data = pd.read_csv('/app/data/data.csv')
 
 # Stream data row by row
 for _, row in data.iterrows():

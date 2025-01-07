@@ -16,7 +16,8 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
@@ -50,7 +51,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1  # Optional: ensures real-time logs
     volumes:
-      - .:/app  # Mount the local directory into the container
+      - ./data:/app/data  # Mount the local `data` folder into the container at `/app/data`
     command: python kafka_producer.py
 
 
