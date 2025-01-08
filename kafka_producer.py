@@ -28,3 +28,8 @@ for _, row in data.iterrows():
     producer.send('your_topic', value=row.to_dict())
     print(f"Sent: {row.to_dict()}")
     time.sleep(1)  # Simulates real-time data
+
+# Keep the container running after processing
+print("Finished sending data. Keeping the container running...")
+while True:
+    time.sleep(60)

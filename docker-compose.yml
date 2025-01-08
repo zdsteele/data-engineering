@@ -28,8 +28,8 @@ services:
     environment:
       - SPARK_MODE=master
     ports:
-      - "4040:4040"  # Spark Master Web UI
-      - "7077:7077"  # Spark Master Port for Workers and Jobs
+      - "4040:4040"
+      - "7077:7077"
 
   spark-worker:
     image: bitnami/spark:latest
@@ -40,7 +40,7 @@ services:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
     ports:
-      - "8081:8081"  # Spark Worker Web UI
+      - "8081:8081"
 
   python-app:
     build:
@@ -49,10 +49,12 @@ services:
     depends_on:
       - kafka
     environment:
-      - PYTHONUNBUFFERED=1  # Optional: ensures real-time logs
+      - PYTHONUNBUFFERED=1
     volumes:
-      - ./data:/app/data  # Mount the local `data` folder into the container at `/app/data`
-    command: python kafka_producer.py
+      - ./data:/app/data
+    command: tail -f /dev/null
+#    command: python kafka_producer.py
+
 
 
 
