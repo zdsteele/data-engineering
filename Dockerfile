@@ -1,4 +1,4 @@
-from gcr.io/datamechanics/spark:platform-3.1-dm14
+FROM gcr.io/datamechanics/spark:platform-3.1-dm14
 
 ENV PYSPARK_MAJOR_PYTHON_VERSION=3
 
@@ -12,5 +12,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Set the default command
-#CMD ["python", "kafka_producer.py"]
+# Default command (optional)
+CMD ["tail", "-f", "/dev/null"]

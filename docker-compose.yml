@@ -26,7 +26,12 @@ services:
     image: bitnami/spark:latest
     container_name: spark-master
     environment:
-      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_LOCAL_IP=spark-master
     ports:
       - "4040:4040"
       - "7077:7077"
@@ -37,7 +42,11 @@ services:
     depends_on:
       - spark-master
     environment:
-      - SPARK_MODE=worker
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_NO_DAEMONIZE=true
       - SPARK_MASTER_URL=spark://spark-master:7077
     ports:
       - "8081:8081"
@@ -50,11 +59,8 @@ services:
       - kafka
     environment:
       - PYTHONUNBUFFERED=1
+      - PYSPARK_PYTHON=/usr/bin/python3
+      - PYSPARK_DRIVER_PYTHON=/usr/bin/python3
     volumes:
       - ./data:/app/data
     command: tail -f /dev/null
-#    command: python kafka_producer.py
-
-
-
-
