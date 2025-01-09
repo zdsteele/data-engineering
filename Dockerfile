@@ -1,16 +1,15 @@
-FROM gcr.io/datamechanics/spark:platform-3.1-dm14
+from gcr.io/datamechanics/spark:platform-3.1-dm14
 
 ENV PYSPARK_MAJOR_PYTHON_VERSION=3
+WORKDIR /opt/application/
 
-# Set working directory
-WORKDIR /app
+#RUN wget  https://jdbc.postgresql.org/download/postgresql-42.2.5.jar
+#RUN mv postgresql-42.2.5.jar /opt/spark/jars
 
-# Install Python dependencies
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
 
-# Copy application code
-COPY . .
+COPY main.py .
 
-# Default command (optional)
-CMD ["tail", "-f", "/dev/null"]
+# Set the default command
+CMD ["python", "main.py"]
