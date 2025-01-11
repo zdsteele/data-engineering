@@ -1,3 +1,7 @@
-kafka-python
-pyspark==3.2.3
-pandas
+pyspark==3.3.2
+kafka-python==2.0.2
+pandas==1.5.3
+numpy==1.23.5
+fastavro==1.7.2
+pytest==7.2.2
+
