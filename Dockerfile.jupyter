@@ -1,0 +1,31 @@
+FROM jupyter/base-notebook:python-3.9
+
+USER root
+
+# Install Java (required for PySpark) and other dependencies
+RUN apt-get update && apt-get install -y openjdk-11-jdk && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file and install Python dependencies
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Set environment variables for Spark
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:$PATH"
+
+# Copy custom CSS for Jupyter
+RUN mkdir -p /home/jovyan/.jupyter/custom
+COPY custom/custom.css /home/jovyan/.jupyter/custom/custom.css
+
+# Remove the default "work" directory and set proper ownership
+RUN rm -rf /home/jovyan/work && chown -R jovyan:users /home/jovyan
+
+# Switch back to jovyan user
+USER jovyan
+
+# Enable Jupyter Lab
+ENV JUPYTER_ENABLE_LAB=yes
+
+# Set working directory to notebooks
+#WORKDIR /home/jovyan/notebooks

@@ -1,1 +1,30 @@
 ideas.txt
+what_to_do.txt
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore local configuration files
+.env
+.local/
+.python_history
+.bash_history
+
+# Ignore Spark checkpoint files
+data/_spark_metadata/
+data/.cache/
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore logs and temp files
+*.log
+*.tmp
+
+# Ignore directories or files created by Jupyter
+data/.ipython/
+data/.jupyter/
+
+

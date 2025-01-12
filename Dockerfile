@@ -1,16 +1,15 @@
-FROM gcr.io/datamechanics/spark:platform-3.1-dm14
-
-ENV PYSPARK_MAJOR_PYTHON_VERSION=3
+FROM python:3.9-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install Python dependencies
-COPY requirements.txt ./
+# Copy requirements and install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY kafka_producer.py .
 
-# Default command (optional)
-CMD ["tail", "-f", "/dev/null"]
+# Default command
+#CMD ["python", "kafka_producer.py"]
+CMD ["bash"]

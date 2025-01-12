@@ -3,7 +3,7 @@ import random
 import datetime
 
 # Number of rows to generate
-num_rows = 100
+num_rows = 10000
 
 # Generate sample data
 data = {

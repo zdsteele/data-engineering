@@ -6,7 +6,7 @@ import json
 print('hello world')
 
 # Retry logic for Kafka connection
-for attempt in range(5):  # Retry 5 times
+for attempt in range(5):
     try:
         producer = KafkaProducer(
             bootstrap_servers='kafka:9092',

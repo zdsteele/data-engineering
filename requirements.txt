@@ -1,3 +1,6 @@
 kafka-python
-pyspark==3.2.3
 pandas
+numpy
+python-dotenv
+pyspark[sql,pandas_on_spark]
+ipykernel
