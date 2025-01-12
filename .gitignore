@@ -27,4 +27,6 @@ __pycache__/
 data/.ipython/
 data/.jupyter/
 
+.venv/
 
+.idea/

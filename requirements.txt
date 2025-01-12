@@ -1,6 +1,12 @@
+pyspark[sql,pandas_on_spark,connect]
 kafka-python
 pandas
 numpy
+fastavro
+pytest
 python-dotenv
-pyspark[sql,pandas_on_spark]
+notebook
 ipykernel
+matplotlib
+seaborn
+plotly
