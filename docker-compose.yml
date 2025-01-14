@@ -36,26 +36,25 @@ services:
 
   kafka-producer:
     build:
-      context: ./kafka-producer  # Ensure the context points to the kafka-producer folder
+      context: ./kafka-producer
       dockerfile: Dockerfile.kafka_producer
     container_name: kafka-producer
+    depends_on:
+      - kafka
     volumes:
       - ./kafka-producer/scripts:/app/scripts
       - ./data:/app/data
-    environment:
-      PYTHONUNBUFFERED: 1
 
   flask:
     build:
       context: .
-      dockerfile: flask/Dockerfile.flask
+      dockerfile: flask_app/Dockerfile.flask
     container_name: flask-app
     ports:
       - "5000:5000"
     volumes:
       - ./data:/app/data
-      - ./flask/templates:/app/templates
-      - ./flask/flask_app.py:/app/flask_app.py
+      - ./flask_app/templates:/app/templates
 
 
 
