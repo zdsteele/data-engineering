@@ -10,3 +10,5 @@ ipykernel
 matplotlib
 seaborn
 plotly
+flask
+flask-cors

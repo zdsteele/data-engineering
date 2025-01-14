@@ -1,6 +1,0 @@
-pyspark[sql,pandas_on_spark]
-kafka-python
-pandas
-numpy
-notebook
-ipykernel

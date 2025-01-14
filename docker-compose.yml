@@ -24,54 +24,37 @@ services:
     ports:
       - "9092:9092"
 
-#  jupyter:
-#    image: jupyter/base-notebook:python-3.9
-#    container_name: jupyter-notebook
-#    depends_on:
-#      - kafka
-#    ports:
-#      - "8888:8888"
-#    volumes:
-#      - ./notebooks:/home/jovyan/work
-#      - ./data:/home/jovyan/data
-#      - ./requirements.txt:/tmp/requirements.txt
-#    environment:
-#      JUPYTER_ENABLE_LAB: "yes"
-#      JUPYTER_TOKEN: ""
-#    user: root  # Run as root user to resolve permission issues
-#    command: >
-#      bash -c "apt-get update &&
-#               apt-get install -y openjdk-11-jdk &&
-#               pip install --no-cache-dir -r /tmp/requirements.txt &&
-#               jupyter lab --ip=0.0.0.0 --allow-root"
-
   jupyter:
     build:
-      context: .
+      context: ./jupyter
       dockerfile: Dockerfile.jupyter
-    container_name: jupyter-notebook
-    depends_on:
-      - kafka
     ports:
       - "8888:8888"
     volumes:
-      - ./notebooks:/home/jovyan/notebooks
       - ./data:/home/jovyan/data
-      - ./custom:/home/jovyan/.jupyter/custom
-    environment:
-      JUPYTER_TOKEN: ""
-    command: >
-      jupyter lab --ip=0.0.0.0 --allow-root
+      - ./jupyter/notebooks:/home/jovyan/notebooks
 
   kafka-producer:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./kafka-producer  # Ensure the context points to the kafka-producer folder
+      dockerfile: Dockerfile.kafka_producer
+    container_name: kafka-producer
     volumes:
-      - ./kafka_producer.py:/app/kafka_producer.py  # Mount the file if not copying
-      - ./requirements.txt:/app/requirements.txt  # Mount the requirements file
+      - ./kafka-producer/scripts:/app/scripts
       - ./data:/app/data
-    depends_on:
-      - kafka
     environment:
       PYTHONUNBUFFERED: 1
+
+  flask:
+    build:
+      context: .
+      dockerfile: flask/Dockerfile.flask
+    container_name: flask-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+      - ./flask/templates:/app/templates
+
+
+

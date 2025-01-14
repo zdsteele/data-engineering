@@ -1,0 +1,14 @@
+pyspark[sql,pandas_on_spark,connect]
+kafka-python
+pandas
+numpy
+fastavro
+pytest
+python-dotenv
+notebook
+ipykernel
+matplotlib
+seaborn
+plotly
+flask
+flask-cors
