@@ -21,8 +21,8 @@ query = raw_stream.selectExpr("CAST(value AS STRING)") \
     .writeStream \
     .outputMode("append") \
     .format("csv") \
-    .option("path", "/app/data/bronze") \
-    .option("checkpointLocation", "/app/data/checkpoints/bronze") \
+    .option("path", "/app/data/bronze_stream") \
+    .option("checkpointLocation", "/app/data/checkpoints/bronze_stream") \
     .start()
 
 query.awaitTermination()

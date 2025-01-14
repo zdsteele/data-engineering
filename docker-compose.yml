@@ -55,6 +55,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./flask/templates:/app/templates
+      - ./flask/flask_app.py:/app/flask_app.py
 
 
 

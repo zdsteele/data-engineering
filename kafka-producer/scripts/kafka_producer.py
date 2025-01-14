@@ -52,9 +52,9 @@ def run_script(script_path):
 
 if __name__ == "__main__":
     # Step 1: Ensure required directories exist
-    os.makedirs("/app/data/bronze", exist_ok=True)
-    os.makedirs("/app/data/silver", exist_ok=True)
-    os.makedirs("/app/data/gold", exist_ok=True)
+    os.makedirs("/app/data/bronze_stream", exist_ok=True)
+    os.makedirs("/app/data/silver_stream", exist_ok=True)
+    os.makedirs("/app/data/gold_stream", exist_ok=True)
 
     # Step 2: Stream data to Kafka
     producer = initialize_kafka_producer(KAFKA_BROKER)
