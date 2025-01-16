@@ -9,7 +9,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install Java (required for PySpark) and other dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    openjdk-17-jdk-headless && \
+    openjdk-17-jdk-headless \
+    curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -17,13 +18,22 @@ RUN apt-get update && \
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
-# Copy requirements file and install Python dependencies
+# Install Python dependencies
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Create directory for Spark JARs
+RUN mkdir -p /opt/spark/jars
+
+# Download Spark and Kafka dependencies
+RUN curl -o /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.3.1.jar \
+    https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.3.1/spark-sql-kafka-0-10_2.12-3.3.1.jar && \
+    curl -o /opt/spark/jars/kafka-clients-3.3.1.jar \
+    https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.3.1/kafka-clients-3.3.1.jar
 
 # Copy application scripts
 COPY scripts/ /app/scripts/
 WORKDIR /app/scripts
 
 # Default command
-CMD ["python", "kafka_producer.py"]
+CMD ["python", "bronze_layer.py"]

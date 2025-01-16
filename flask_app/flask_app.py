@@ -9,6 +9,7 @@ app = Flask(__name__)
 
 KAFKA_TOPIC = "airline_data"
 KAFKA_BROKER = "kafka:9092"
+GOLD_TOPIC = "gold_topic"
 
 # Shared data for real-time updates
 data_rows = []
@@ -51,6 +52,21 @@ threading.Thread(target=consume_kafka_data, daemon=True).start()
 @app.route('/')
 def index():
     return render_template("index.html", data_rows=data_rows)
+
+
+@app.route("/gold-data")
+def gold_data():
+    consumer = KafkaConsumer(
+        GOLD_TOPIC,
+        bootstrap_servers=KAFKA_BROKER,
+        value_deserializer=lambda m: json.loads(m.decode("utf-8")),
+        auto_offset_reset="earliest",
+        enable_auto_commit=True,
+        group_id="gold_consumer_group"
+    )
+    gold_data = [message.value for message in consumer]
+    return jsonify(gold_data)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
