@@ -1,28 +1,22 @@
-from pyspark.sql import SparkSession
+from kafka import KafkaProducer
+import pandas as pd
+import json
+import time
 
-# Kafka and Spark Configuration
-KAFKA_TOPIC = "airline_data"
 KAFKA_BROKER = "kafka:9092"
+BRONZE_TOPIC = "bronze_topic"
 
-# Initialize Spark
-spark = SparkSession.builder \
-    .appName("BronzeLayer") \
-    .getOrCreate()
+def stream_to_bronze(csv_path):
+    producer = KafkaProducer(
+        bootstrap_servers=KAFKA_BROKER,
+        value_serializer=lambda v: json.dumps(v).encode("utf-8")
+    )
+    data = pd.read_csv(csv_path)
+    for _, row in data.iterrows():
+        producer.send(BRONZE_TOPIC, value=row.to_dict())
+        print(f"Bronze Layer: Sent {row.to_dict()}")
+        time.sleep(1)  # Simulate streaming delay
 
-# Read Kafka Stream
-raw_stream = spark.readStream \
-    .format("kafka") \
-    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
-    .option("subscribe", KAFKA_TOPIC) \
-    .load()
-
-# Save raw data to Bronze layer
-query = raw_stream.selectExpr("CAST(value AS STRING)") \
-    .writeStream \
-    .outputMode("append") \
-    .format("csv") \
-    .option("path", "/app/data/bronze_stream") \
-    .option("checkpointLocation", "/app/data/checkpoints/bronze_stream") \
-    .start()
-
-query.awaitTermination()
+if __name__ == "__main__":
+    csv_path = "/app/data/Raw_Airline_data.csv"
+    stream_to_bronze(csv_path)
