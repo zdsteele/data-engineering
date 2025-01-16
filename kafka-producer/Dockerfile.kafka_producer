@@ -6,15 +6,17 @@ WORKDIR /app
 # Ensure non-interactive apt-get operations
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Java (required for PySpark) and other dependencies
+# Fix apt repository issues and install Java (OpenJDK 17) and curl
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-    openjdk-17-jdk-headless \
-    curl && \
+    openjdk-17-jre-headless \
+    curl \
+    procps && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Set environment variables for Spark
+# Set environment variables for Java
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
@@ -22,17 +24,33 @@ ENV PATH="$JAVA_HOME/bin:$PATH"
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-# Create directory for Spark JARs
-RUN mkdir -p /opt/spark/jars
+# Install Spark binaries
+RUN curl -o /tmp/spark-3.5.4-bin-hadoop3.tgz \
+    https://downloads.apache.org/spark/spark-3.5.4/spark-3.5.4-bin-hadoop3.tgz && \
+    tar -xzf /tmp/spark-3.5.4-bin-hadoop3.tgz -C /opt && \
+    rm /tmp/spark-3.5.4-bin-hadoop3.tgz
 
-# Download Spark and Kafka dependencies
-RUN curl -o /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.3.1.jar \
-    https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.3.1/spark-sql-kafka-0-10_2.12-3.3.1.jar && \
-    curl -o /opt/spark/jars/kafka-clients-3.3.1.jar \
-    https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.3.1/kafka-clients-3.3.1.jar
+# Set Spark environment variables
+ENV SPARK_HOME=/opt/spark-3.5.4-bin-hadoop3
+ENV PATH="$SPARK_HOME/bin:$PATH"
+
+# Download Kafka dependencies for Spark
+RUN curl -o $SPARK_HOME/jars/spark-sql-kafka-0-10_2.12-3.5.4.jar \
+    https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.5.4/spark-sql-kafka-0-10_2.12-3.5.4.jar && \
+    curl -o $SPARK_HOME/jars/kafka-clients-3.5.4.jar \
+    https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.5.4/kafka-clients-3.5.4.jar && \
+    curl -o $SPARK_HOME/jars/spark-token-provider-kafka-0-10_2.12-3.5.4.jar \
+    https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.12/3.5.4/spark-token-provider-kafka-0-10_2.12-3.5.4.jar && \
+    curl -o $SPARK_HOME/jars/commons-pool2-2.11.1.jar \
+    https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.11.1/commons-pool2-2.11.1.jar
+
+# Ensure required directories for Spark logging and checkpoints
+RUN mkdir -p /app/checkpoints /app/logs
 
 # Copy application scripts
 COPY scripts/ /app/scripts/
+
+# Set default working directory for container
 WORKDIR /app/scripts
 
 # Default command
