@@ -34,5 +34,6 @@ def stream_to_bronze(csv_path):
         time.sleep(1)  # Simulate streaming delay
 
 if __name__ == "__main__":
+    print('Starting Bronze...')
     csv_path = "/app/data/Raw_Airline_data.csv"
     stream_to_bronze(csv_path)

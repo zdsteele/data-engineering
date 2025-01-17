@@ -34,15 +34,18 @@ RUN curl -o /tmp/spark-3.5.4-bin-hadoop3.tgz \
 ENV SPARK_HOME=/opt/spark-3.5.4-bin-hadoop3
 ENV PATH="$SPARK_HOME/bin:$PATH"
 
-# Download Kafka dependencies for Spark
+# Download Kafka dependencies for Spark (ensure compatibility with Spark 3.5.4 and Kafka)
 RUN curl -o $SPARK_HOME/jars/spark-sql-kafka-0-10_2.12-3.5.4.jar \
     https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.5.4/spark-sql-kafka-0-10_2.12-3.5.4.jar && \
-    curl -o $SPARK_HOME/jars/kafka-clients-3.5.4.jar \
-    https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.5.4/kafka-clients-3.5.4.jar && \
+    curl -o $SPARK_HOME/jars/kafka-clients-3.5.0.jar \
+    https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.5.0/kafka-clients-3.5.0.jar && \
     curl -o $SPARK_HOME/jars/spark-token-provider-kafka-0-10_2.12-3.5.4.jar \
     https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.12/3.5.4/spark-token-provider-kafka-0-10_2.12-3.5.4.jar && \
     curl -o $SPARK_HOME/jars/commons-pool2-2.11.1.jar \
     https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.11.1/commons-pool2-2.11.1.jar
+
+# Compatibility Note: Kafka 3.5.0 is compatible with Spark 3.5.4.
+# If your Kafka broker version differs, update the kafka-clients JAR to match your broker version.
 
 # Ensure required directories for Spark logging and checkpoints
 RUN mkdir -p /app/checkpoints /app/logs
@@ -54,4 +57,4 @@ COPY scripts/ /app/scripts/
 WORKDIR /app/scripts
 
 # Default command
-CMD ["python", "bronze_layer.py"]
+CMD ["tail", "-f", "/dev/null"]

@@ -2,27 +2,31 @@ version: '3.8'
 
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: docker.io/bitnami/zookeeper:3.8
     container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: docker.io/bitnami/kafka:3.5.1
     container_name: kafka
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
+    environment:
+      - BITNAMI_DEBUG=yes
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ENABLE_KRAFT=false
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
 
   jupyter:
     build:
@@ -34,16 +38,6 @@ services:
       - ./data:/home/jovyan/data
       - ./jupyter/notebooks:/home/jovyan/notebooks
 
-#  kafka-producer:
-#    build:
-#      context: ./kafka-producer
-#      dockerfile: Dockerfile.kafka_producer
-#    container_name: kafka-producer
-#    depends_on:
-#      - kafka
-#    volumes:
-#      - ./kafka-producer/scripts:/app/scripts
-#      - ./data:/app/data
 
   bronze-layer:
     build:
@@ -55,6 +49,7 @@ services:
     volumes:
       - ./kafka-producer/scripts:/app/scripts
       - ./data:/app/data
+    command: python bronze_layer.py
     environment:
       KAFKA_BROKER: "kafka:9092"
       KAFKA_TOPIC: "bronze_topic"
@@ -81,7 +76,7 @@ services:
       dockerfile: Dockerfile.kafka_producer
     container_name: gold-layer
     depends_on:
-      - silver-layer
+      - kafka
     volumes:
       - ./kafka-producer/scripts:/app/scripts
       - ./data:/app/data
@@ -108,16 +103,6 @@ services:
       GOLD_TOPIC: "gold_topic"
 
 
-#  flask:
-#    build:
-#      context: .
-#      dockerfile: flask_app/Dockerfile.flask
-#    container_name: flask-app
-#    ports:
-#      - "5000:5000"
-#    volumes:
-#      - ./data:/app/data
-#      - ./flask_app/templates:/app/templates
 
 
 
