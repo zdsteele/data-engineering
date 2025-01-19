@@ -1,39 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Airline Data</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Real-Time Airline Data</h1>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Passenger ID</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Gender</th>
-                <th>Age</th>
-                <th>Nationality</th>
-                <th>Airport Name</th>
-                <th>Departure Date</th>
-                <th>Flight Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in data_rows %}
-            <tr>
-                <td>{{ row["Passenger ID"] }}</td>
-                <td>{{ row["First Name"] }}</td>
-                <td>{{ row["Last Name"] }}</td>
-                <td>{{ row["Gender"] }}</td>
-                <td>{{ row["Age"] }}</td>
-                <td>{{ row["Nationality"] }}</td>
-                <td>{{ row["Airport Name"] }}</td>
-                <td>{{ row["Departure Date"] }}</td>
-                <td>{{ row["Flight Status"] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h1>Real-Time Data Received from Spark</h1>
+    <ul id="data-list"></ul>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

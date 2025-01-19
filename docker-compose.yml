@@ -1,13 +1,10 @@
 version: '3.8'
-
 services:
   zookeeper:
-    image: docker.io/bitnami/zookeeper:3.8
+    image: confluentinc/cp-zookeeper
     container_name: zookeeper
-    ports:
-      - "2181:2181"
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+      ZOOKEEPER_CLIENT_PORT: 2181
 
   kafka:
     image: docker.io/bitnami/kafka:3.5.1
@@ -15,16 +12,16 @@ services:
     ports:
       - "9092:9092"
     environment:
-      - BITNAMI_DEBUG=yes
-      - KAFKA_BROKER_ID=1
-      - KAFKA_ENABLE_KRAFT=false
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
-      - ALLOW_PLAINTEXT_LISTENER=yes
+      BITNAMI_DEBUG: "yes"
+      KAFKA_BROKER_ID: 1
+      KAFKA_ENABLE_KRAFT: "false"
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"     #
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      ALLOW_PLAINTEXT_LISTENER: "yes"
     depends_on:
       - zookeeper
 
@@ -38,69 +35,21 @@ services:
       - ./data:/home/jovyan/data
       - ./jupyter/notebooks:/home/jovyan/notebooks
 
-
-  bronze-layer:
+  spark:
     build:
-      context: ./kafka-producer
-      dockerfile: Dockerfile.kafka_producer
-    container_name: bronze-layer
+      context: ./spark
+      dockerfile: Dockerfile
+    container_name: spark
     depends_on:
       - kafka
-    volumes:
-      - ./kafka-producer/scripts:/app/scripts
-      - ./data:/app/data
-    command: python bronze_layer.py
-    environment:
-      KAFKA_BROKER: "kafka:9092"
-      KAFKA_TOPIC: "bronze_topic"
+      - flask_app
 
-  silver-layer:
+  flask_app:
     build:
-      context: ./kafka-producer
-      dockerfile: Dockerfile.kafka_producer
-    container_name: silver-layer
-    depends_on:
-      - bronze-layer
-    volumes:
-      - ./kafka-producer/scripts:/app/scripts
-      - ./data:/app/data
-    command: python silver_layer.py
-    environment:
-      KAFKA_BROKER: "kafka:9092"
-      BRONZE_TOPIC: "bronze_topic"
-      SILVER_TOPIC: "silver_topic"
-
-  gold-layer:
-    build:
-      context: ./kafka-producer
-      dockerfile: Dockerfile.kafka_producer
-    container_name: gold-layer
-    depends_on:
-      - kafka
-    volumes:
-      - ./kafka-producer/scripts:/app/scripts
-      - ./data:/app/data
-    command: python gold_layer.py
-    environment:
-      KAFKA_BROKER: "kafka:9092"
-      SILVER_TOPIC: "silver_topic"
-      GOLD_TOPIC: "gold_topic"
-
-  flask-app:
-    build:
-      context: .
-      dockerfile: flask_app/Dockerfile.flask
-    container_name: flask-app
-    depends_on:
-      - gold-layer
+      context: ./flask_app
+    container_name: flask_app
     ports:
-      - "5000:5000"
-    volumes:
-      - ./data:/app/data
-      - ./flask_app/templates:/app/templates
-    environment:
-      KAFKA_BROKER: "kafka:9092"
-      GOLD_TOPIC: "gold_topic"
+      - 5000:5000
 
 
 
