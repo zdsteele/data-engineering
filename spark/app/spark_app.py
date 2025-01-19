@@ -4,17 +4,30 @@ import time
 import json
 import requests
 from kafka.errors import NoBrokersAvailable
+import pandas as pd
 
+# Kafka and Flask configuration
 KAFKA_BROKER = "kafka:9092"
-KAFKA_TOPIC = "your_topic"
+KAFKA_TOPIC = "air_travel"
 FLASK_ENDPOINT = "http://flask_app:5000/ingest"
+
+# Read airline data CSV into a Pandas DataFrame
+csv_file = "/data/Raw_Airline_data.csv"
+df = pd.read_csv(csv_file)
+
+# Read countries data for latitude and longitude
+countries_file = "/data/countries.csv"
+countries_df = pd.read_csv(countries_file)
 
 # Initialize Spark session
 spark = SparkSession.builder \
     .appName("KafkaToFlask") \
     .getOrCreate()
 
-# Produce fake data to Kafka
+# Load the countries.csv file into a Spark DataFrame
+spark_countries_df = spark.read.csv(countries_file, header=True, inferSchema=True)
+
+# Produce data to Kafka
 def produce_data():
     from kafka import KafkaProducer
     while True:
@@ -28,15 +41,22 @@ def produce_data():
             print("Kafka broker not available. Retrying in 5 seconds...")
             time.sleep(5)
 
-    for i in range(1, 1000):
-        data = {"id": i, "name": f"user_{i}"}
+    # Iterate through rows in the airline data CSV and send to Kafka
+    for _, row in df.iterrows():
+        # Convert row to a dictionary
+        data = row.to_dict()
+
+        # Send row data as a message to Kafka
         producer.send(KAFKA_TOPIC, value=data)
         print(f"Produced: {data}")
-        time.sleep(1)
+        time.sleep(1)  # Adjust the delay if needed
+
+    # Flush and close the producer
     producer.flush()
     producer.close()
 
-# Consume data from Kafka and send to Flask
+
+# Consume data from Kafka, enrich it, and send to Flask
 def consume_and_send():
     kafka_df = spark.readStream \
         .format("kafka") \
@@ -46,13 +66,44 @@ def consume_and_send():
 
     messages = kafka_df.selectExpr("CAST(value AS STRING) as message")
 
-    def send_to_flask(batch_df, batch_id):
-        for row in batch_df.collect():
-            response = requests.post(FLASK_ENDPOINT, json={"message": row["message"]})
-            print(f"Sent to Flask: {row['message']} | Response: {response.status_code}")
+    # Parse the Kafka JSON data
+    parsed_df = messages.selectExpr(
+        "json_tuple(message, 'Passenger ID', 'First Name', 'Last Name', 'Airport Country Code', 'Flight Status') as (Passenger_ID, First_Name, Last_Name, Country_Code, Flight_Status)"
+    )
 
-    query = messages.writeStream.foreachBatch(send_to_flask).start()
+    # Join with the countries DataFrame for latitude and longitude
+    enriched_df = parsed_df.join(
+        spark_countries_df,
+        parsed_df["Country_Code"] == spark_countries_df["country"],
+        "left"
+    ).select(
+        "Passenger_ID",
+        "First_Name",
+        "Last_Name",
+        "Country_Code",
+        "Flight_Status",
+        "latitude",
+        "longitude"
+    )
+
+    def send_to_flask(batch_df, batch_id):
+        # Convert each batch to Pandas and send rows to Flask
+        for row in batch_df.collect():
+            data = {
+                "Passenger_ID": row["Passenger_ID"],
+                "First_Name": row["First_Name"],
+                "Last_Name": row["Last_Name"],
+                "Country_Code": row["Country_Code"],
+                "Flight_Status": row["Flight_Status"],
+                "Latitude": row["latitude"],
+                "Longitude": row["longitude"]
+            }
+            response = requests.post(FLASK_ENDPOINT, json=data)
+            print(f"Sent to Flask: {data} | Response: {response.status_code}")
+
+    query = enriched_df.writeStream.foreachBatch(send_to_flask).start()
     query.awaitTermination()
+
 
 # Run the Spark producer and consumer
 if __name__ == "__main__":
@@ -60,5 +111,5 @@ if __name__ == "__main__":
     producer_thread = threading.Thread(target=produce_data, daemon=True)
     producer_thread.start()
 
-    # Start consuming and sending data to Flask
+    # Start consuming, enriching, and sending data to Flask
     consume_and_send()
