@@ -52,9 +52,9 @@ eventSource.onmessage = function (event) {
         // Determine circle color based on `Flight_Status`
         let color = "blue"; // Default
         if (Flight_Status === "Delayed") {
-            color = "red";
-        } else if (Flight_Status === "Cancelled") {
             color = "orange";
+        } else if (Flight_Status === "Cancelled") {
+            color = "red";
         } else if (Flight_Status === "On Time") {
             color = "green";
         }
